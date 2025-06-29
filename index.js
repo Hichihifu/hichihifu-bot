@@ -117,6 +117,9 @@ client.on("messageCreate", async (message) => {
 });
 
 //chào buổi sáng
+const { EmbedBuilder } = require("discord.js");
+const CHANNEL_ID = process.env.CHANNEL_ID;
+
 const morningHour = 7;    // 7 giờ sáng
 const morningMinute = 0;  // 0 phút
 let lastSentDate = null;
@@ -137,7 +140,7 @@ setInterval(() => {
     const channel = client.channels.cache.get(CHANNEL_ID);
     if (channel) {
       const embed = new EmbedBuilder()
-        .setColor(#A7C7E7)
+        .setColor("#A7C7E7")
         .setTitle("Chào buổi sáng nhé")
         .setDescription("Sáng rùi server dậy đi nà~")
         .setImage("https://media1.tenor.com/m/1cIigwthwRIAAAAC/shirakami-fubuki-fubuki.gif")
