@@ -116,4 +116,35 @@ client.on("messageCreate", async (message) => {
   }
 });
 
+//chào buổi sáng
+setInterval(() => {
+  const nowUTC = new Date();
+  const nowVN = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
+
+  const hour = nowVN.getHours();
+  const minute = nowVN.getMinutes();
+  const today = nowVN.toDateString();
+
+  if (
+    hour === morningHour &&
+    minute === morningMinute &&
+    lastSentDate !== today
+  ) {
+    const channel = client.channels.cache.get(CHANNEL_ID);
+    if (channel) {
+      const embed = new EmbedBuilder()
+        .setColor(0xffcc00)
+        .setTitle("☀️ Chào buổi sáng nhé!")
+        .setDescription("Chúc bạn một ngày tuyệt vời! 💙")
+        .setImage("https://media1.tenor.com/m/1cIigwthwRIAAAAC/shirakami-fubuki-fubuki.gif")
+        .setFooter({ text: "Gửi từ bot yêu dấu của bạn ~" });
+
+      channel.send({ embeds: [embed] });
+      lastSentDate = today;
+    }
+  }
+}, 60 * 1000);
+
+
+
 client.login(process.env.TOKEN);
