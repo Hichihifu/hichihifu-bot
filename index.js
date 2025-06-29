@@ -153,5 +153,16 @@ setInterval(() => {
 }, 60 * 1000);
 
 
+// --- Mở cổng cho Render ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("Bot is running!");
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Express server is running on port ${PORT}`);
+});
 
 client.login(process.env.TOKEN);
