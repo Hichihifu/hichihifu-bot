@@ -153,5 +153,14 @@ setInterval(() => {
 }, 60 * 1000);
 
 
+//fake port
+const http = require("http");
+
+http.createServer((req, res) => {
+  res.write("Bot is running!");
+  res.end();
+}).listen(process.env.PORT || 3000);
+
+
 
 client.login(process.env.TOKEN);
