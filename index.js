@@ -117,6 +117,10 @@ client.on("messageCreate", async (message) => {
 });
 
 //chào buổi sáng
+const morningHour = 7;    // 7 giờ sáng
+const morningMinute = 0;  // 0 phút
+let lastSentDate = null;
+
 setInterval(() => {
   const nowUTC = new Date();
   const nowVN = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
@@ -133,11 +137,11 @@ setInterval(() => {
     const channel = client.channels.cache.get(CHANNEL_ID);
     if (channel) {
       const embed = new EmbedBuilder()
-        .setColor(0xffcc00)
-        .setTitle("☀️ Chào buổi sáng nhé!")
-        .setDescription("Chúc bạn một ngày tuyệt vời! 💙")
+        .setColor(#A7C7E7)
+        .setTitle("Chào buổi sáng nhé")
+        .setDescription("Sáng rùi server dậy đi nà~")
         .setImage("https://media1.tenor.com/m/1cIigwthwRIAAAAC/shirakami-fubuki-fubuki.gif")
-        .setFooter({ text: "Gửi từ bot yêu dấu của bạn ~" });
+        .setFooter({ text: "Gửi từ tình iu của chichi de thw ~" });
 
       channel.send({ embeds: [embed] });
       lastSentDate = today;
