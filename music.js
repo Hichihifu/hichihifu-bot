@@ -2,7 +2,6 @@
 const { DisTube } = require("distube");
 const { YtDlpPlugin } = require("@distube/yt-dlp");
 const { SpotifyPlugin } = require("@distube/spotify");
-const { SoundCloudPlugin } = require("@distube/soundcloud");
 
 /**
  * Hàm khởi tạo và cấu hình Distube
@@ -17,7 +16,6 @@ function setupMusic(client) {
     plugins: [
       new YtDlpPlugin(),
       new SpotifyPlugin(),
-      new SoundCloudPlugin()
     ]
   });
 
