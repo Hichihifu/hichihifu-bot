@@ -144,7 +144,7 @@ setInterval(() => {
         .setColor("#A7C7E7")
         .setTitle("Chào buổi sáng nhé")
         .setDescription("Sáng rùi server dậy đi nà~")
-        .setImage("https://media1.tenor.com/m/1cIigwthwRIAAAAC/shirakami-fubuki-fubuki.gif")
+        .setImage("https://media.tenor.com/1cIigwthwRIAAAAC/shirakami-fubuki-fubuki.gif")
         .setFooter({ text: "Gửi từ tình iu của chichi de thw ~" });
 
       channel.send({ embeds: [embed] });
