@@ -23,7 +23,7 @@ const client = new Client({
   ],
 });
 
-const PREFIX = "/";
+const PREFIX = "?";
 
 /** ------------------------------------------------------------------
  * 2️⃣  Khởi tạo Distube (phát nhạc) & Auto chào buổi sáng
