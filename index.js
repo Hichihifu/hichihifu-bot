@@ -1,54 +1,38 @@
-require("dotenv").config();
-const { Client, GatewayIntentBits, PermissionsBitField } = require("discord.js");
-const fs = require("fs");
-const path = require("path");
-const express = require("express");
-
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
-});
-
-const PREFIX = "/";
-
-// --- Xử lý file trả lời riêng theo từng server ---
-function getRepliesPath(guildId) {
-  return path.join(__dirname, "replies", `${guildId}.json`);
-}
-
-function loadReplies(guildId) {
-  const filePath = getRepliesPath(guildId);
-  if (fs.existsSync(filePath)) {
-    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  } else {
-    return {};
-  }
-}
-
-function saveReplies(guildId, data) {
-  const dir = path.join(__dirname, "replies");
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-  fs.writeFileSync(getRepliesPath(guildId), JSON.stringify(data, null, 2));
-}
-
-// --- Bot khởi động ---
-client.once("ready", () => {
-  console.log(`🤖 Bot đang chạy dưới tên ${client.user.tag}`);
-});
-
-// --- Xử lý tin nhắn ---
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.guild) return;
 
   const guildId = message.guild.id;
   let replies = loadReplies(guildId);
   const content = message.content.trim();
+  const lower = content.toLowerCase();
 
-  // --- Thêm câu trả lời ---
-  if (content.startsWith(`${PREFIX}addreply`)) {
+  // === Lệnh nhạc ===
+  if (lower.startsWith("/play")) {
+    const song = content.slice(5).trim();
+    if (!message.member.voice.channel) {
+      return message.channel.send("🔊 Bạn cần vào voice channel trước!");
+    }
+    distube.play(message.member.voice.channel, song, {
+      member: message.member,
+      textChannel: message.channel,
+      message,
+    });
+    return;
+  }
+
+  if (lower.startsWith("/skip")) {
+    distube.skip(message);
+    return;
+  }
+
+  if (lower.startsWith("/stop")) {
+    distube.stop(message);
+    message.channel.send("⏹️ Đã dừng phát nhạc.");
+    return;
+  }
+
+  // === Lệnh quản lý trả lời ===
+  if (lower.startsWith(`${PREFIX}addreply`)) {
     if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
       return message.channel.send("❌ Bạn không có quyền sử dụng lệnh này.");
     }
@@ -70,8 +54,7 @@ client.on("messageCreate", async (message) => {
     return message.channel.send(`✅ Đã thêm: \`${key}\` → \`${value}\``);
   }
 
-  // --- Xóa câu trả lời ---
-  if (content.startsWith(`${PREFIX}delreply`)) {
+  if (lower.startsWith(`${PREFIX}delreply`)) {
     if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
       return message.channel.send("❌ Bạn không có quyền sử dụng lệnh này.");
     }
@@ -91,8 +74,7 @@ client.on("messageCreate", async (message) => {
     return message.channel.send(`🗑️ Đã xóa câu hỏi: \`${key}\``);
   }
 
-  // --- Liệt kê danh sách ---
-  if (content.startsWith(`${PREFIX}listreplies`)) {
+  if (lower.startsWith(`${PREFIX}listreplies`)) {
     if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
       return message.channel.send("❌ Bạn không có quyền sử dụng lệnh này.");
     }
@@ -110,60 +92,8 @@ client.on("messageCreate", async (message) => {
     return message.channel.send(`📋 **Danh sách câu hỏi đã lưu:**\n${list}`);
   }
 
-  // --- Trả lời nếu khớp ---
-  const lower = content.toLowerCase();
+  // === Trả lời tự động ===
   if (replies[lower]) {
     return message.channel.send(replies[lower]);
   }
 });
-
-//chào buổi sáng
-const { EmbedBuilder } = require("discord.js");
-const CHANNEL_ID = process.env.CHANNEL_ID;
-
-const morningHour = 7;    // 7 giờ sáng
-const morningMinute = 0;  // 0 phút
-let lastSentDate = null;
-
-setInterval(() => {
-  const nowUTC = new Date();
-  const nowVN = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
-
-  const hour = nowVN.getHours();
-  const minute = nowVN.getMinutes();
-  const today = nowVN.toDateString();
-
-  if (
-    hour === morningHour &&
-    minute === morningMinute &&
-    lastSentDate !== today
-  ) {
-    const channel = client.channels.cache.get(CHANNEL_ID);
-    if (channel) {
-      const embed = new EmbedBuilder()
-        .setColor("#A7C7E7")
-        .setTitle("Chào buổi sáng nhé")
-        .setDescription("Sáng rùi server dậy đi nà~")
-        .setImage("https://media.tenor.com/1cIigwthwRIAAAAC/shirakami-fubuki-fubuki.gif")
-        .setFooter({ text: "Gửi từ tình iu của chichi de thw ~" });
-
-      channel.send({ embeds: [embed] });
-      lastSentDate = today;
-    }
-  }
-}, 60 * 1000);
-
-
-// --- Mở cổng cho Render ---
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get("/", (req, res) => {
-  res.send("Bot is running!");
-});
-
-app.listen(PORT, () => {
-  console.log(`🌐 Express server is running on port ${PORT}`);
-});
-
-client.login(process.env.TOKEN);
