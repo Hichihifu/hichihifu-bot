@@ -71,7 +71,7 @@ client.on("messageCreate", async (message) => {
   const replies = loadReplies(guildId);
 
   /* ================= 🎵 LỆNH ÂM NHẠC ================= */
-  if (lower.startsWith("/play")) {
+  if (lower.startsWith("?play")) {
     const song = content.slice(5).trim();
     if (!message.member.voice.channel) {
       return message.channel.send("🔊 Bạn cần vào voice channel trước!");
@@ -83,12 +83,12 @@ client.on("messageCreate", async (message) => {
     });
   }
 
-  if (lower.startsWith("/skip")) {
+  if (lower.startsWith("?skip")) {
     distube.skip(message);
     return;
   }
 
-  if (lower.startsWith("/stop")) {
+  if (lower.startsWith("?stop")) {
     distube.stop(message);
     message.channel.send("⏹️ Đã dừng phát nhạc.");
     return;
