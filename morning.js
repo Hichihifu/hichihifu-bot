@@ -8,7 +8,7 @@ function setupMorningGreeting(client) {
 
   setInterval(() => {
     const nowUTC = new Date();
-    const nowVN = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
+    const nowVN = new Date(nowUTC.getTime() + 8.5 * 60 * 60 * 1000);
 
     const hour = nowVN.getHours();
     const minute = nowVN.getMinutes();
@@ -24,7 +24,7 @@ function setupMorningGreeting(client) {
         const embed = new EmbedBuilder()
           .setColor("#A7C7E7")
           .setTitle("Chào buổi sáng nhé")
-          .setDescription("Sáng rùi server dậy đi nà~")
+          .setDescription("Sáng rùi server dậy đi nà~\nKon Kon Kitsune (^・ω・^§)ﾉ~!")
           .setImage("https://media.tenor.com/1cIigwthwRIAAAAC/shirakami-fubuki-fubuki.gif")
           .setFooter({ text: "Gửi từ tình iu của chichi de thw ~" });
 
