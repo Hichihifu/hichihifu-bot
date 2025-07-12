@@ -8,9 +8,11 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const { setupMorningGreeting } = require("./morning");
+const { setupSpecialReminder } = require("./specialReminder");
+
 
 /**
- * 1️⃣  Khởi tạo Client với intents cần thiết
+ *   Khởi tạo Client với intents cần thiết
  */
 const client = new Client({
   intents: [
@@ -23,12 +25,17 @@ const client = new Client({
 const PREFIX = "?";
 
 /** ------------------------------------------------------------------
- * 2️⃣  Tính năng chào buổi sáng
+ *  Tính năng chào buổi sáng
  * -----------------------------------------------------------------*/
 setupMorningGreeting(client);
 
 /** ------------------------------------------------------------------
- * 3️⃣  Các hàm lưu/đọc replies riêng cho từng server
+ *  Tính năng thông báo ngày đặc biêt
+ * -----------------------------------------------------------------*/
+setupSpecialReminder(client);
+
+/** ------------------------------------------------------------------
+ *   Các hàm lưu/đọc replies riêng cho từng server
  * -----------------------------------------------------------------*/
 function getRepliesPath(guildId) {
   return path.join(__dirname, "replies", `${guildId}.json`);
