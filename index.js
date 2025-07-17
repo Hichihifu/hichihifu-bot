@@ -9,6 +9,7 @@ const path = require("path");
 const express = require("express");
 const { setupMorningGreeting } = require("./morning");
 const { setupSpecialReminder } = require("./specialReminder");
+const { askGemini } = require("./gemini");
 
 
 /**
@@ -113,7 +114,34 @@ client.on("messageCreate", async (message) => {
     const list = keys.map((k, i) => `${i + 1}. \`${k}\` → ${replies[k]}`).join("\n").slice(0, 1900);
     return message.channel.send(`📋 **Danh sách câu hỏi đã lưu:**\n${list}`);
   }
+  /* =============== 🔮 LỆNH HỎI GEMINI =============== */
+  if (lower.startsWith(`${PREFIX}ask`)) {
+    const question = content.slice(PREFIX.length + 3).trim();
+    if (!question) return message.reply("❗ Vui lòng nhập câu hỏi sau `?ask`.");
 
+    const thinkingMsg = await message.channel.send("⏳ Đang suy nghĩ...");
+    try {
+      const response = await askGemini(question);
+
+      await thinkingMsg.delete();
+
+      if (!response) {
+        return message.reply("🤔 Không có câu trả lời phù hợp.");
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor("#5865F2")
+        .setTitle("🤖 Trả lời từ Gemini")
+        .setDescription(response.slice(0, 4000))
+        .setFooter({ text: "Powered by Google Gemini" });
+
+      return message.reply({ embeds: [embed] });
+    } catch (err) {
+      console.error(err);
+      await thinkingMsg.delete();
+      return message.reply("❌ Có lỗi khi gọi Gemini API.");
+    }
+  }
   /* =============== 💬 TRẢ LỜI TỰ ĐỘNG =============== */
   if (replies[lower]) return message.channel.send(replies[lower]);
 });
