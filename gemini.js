@@ -10,18 +10,27 @@ if (!GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-async function askGemini(question) {
+/**
+ * Gọi Gemini với ngữ cảnh hội thoại
+ * @param {string} question - Câu hỏi mới
+ * @param {Array} history - Danh sách {role, text}
+ */
+async function askGemini(question, history = []) {
   if (!GEMINI_API_KEY) {
     return "⚠️ Chưa cấu hình GEMINI_API_KEY.";
   }
 
   try {
-    const result = await model.generateContent(question);
+    // Ghép ngữ cảnh cũ vào prompt
+    const promptParts = history
+      .map((item) => `${item.role === "user" ? "Người dùng" : "Bot"}: ${item.text}`)
+      .join("\n");
+    const fullPrompt = `${promptParts}\nNgười dùng: ${question}\nBot:`;
 
-    // Log toàn bộ phản hồi để debug
+    const result = await model.generateContent(fullPrompt);
+
     console.log("Gemini raw result:", JSON.stringify(result, null, 2));
 
-    // Parse dữ liệu trả về an toàn
     let text =
       (result?.response?.text && result.response.text()) ||
       (result?.response?.candidates?.[0]?.content?.parts?.[0]?.text) ||
