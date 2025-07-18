@@ -1,46 +1,59 @@
 // gemini.js
-require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) {
-  console.warn("[Gemini] Không tìm thấy GEMINI_API_KEY trong biến môi trường!");
-}
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY || "");
+// Lấy API Key từ biến môi trường
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 /**
- * Gọi Gemini với ngữ cảnh hội thoại
- * @param {string} question - Câu hỏi mới
- * @param {Array} history - Danh sách {role, text}
+ * Hàm gọi Gemini với context + cá nhân hóa
+ * @param {string} question - Câu hỏi của user
+ * @param {Array} history - Danh sách hội thoại [{role:"user"|"bot", text:"..."}]
+ * @param {object} userConfig - {style, tone}
  */
-async function askGemini(question, history = []) {
-  if (!GEMINI_API_KEY) {
-    return "⚠️ Chưa cấu hình GEMINI_API_KEY.";
-  }
-
+async function askGemini(question, history = [], userConfig = {}) {
   try {
-    // Ghép ngữ cảnh cũ vào prompt
-    const promptParts = history
-      .map((item) => `${item.role === "user" ? "Người dùng" : "Bot"}: ${item.text}`)
-      .join("\n");
-    const fullPrompt = `${promptParts}\nNgười dùng: ${question}\nBot:`;
+    const style = userConfig.style || "tự nhiên";
+    const tone = userConfig.tone || "thân thiện";
 
+    // Prompt chính
+    const baseInstruction = `
+Bạn là một trợ lý AI thông minh và thân thiện, trả lời tự nhiên, giống con người.
+Luôn trả lời bằng tiếng Việt, thêm emoji nếu phù hợp.
+Phong cách: ${style}, Tone: ${tone}.
+Đừng trả lời quá ngắn, hãy thêm ví dụ nếu phù hợp.
+    `;
+
+    // Gắn hội thoại trước (ngữ cảnh)
+    const historyPrompt = history
+      .map((h) => `${h.role === "user" ? "Người dùng" : "Bot"}: ${h.text}`)
+      .join("\n");
+
+    const fullPrompt = `
+${baseInstruction}
+
+Đây là hội thoại trước đó:
+${historyPrompt}
+
+Người dùng: ${question}
+Bot:
+    `;
+
+    // Gọi API Gemini
     const result = await model.generateContent(fullPrompt);
 
-    console.log("Gemini raw result:", JSON.stringify(result, null, 2));
+    console.log("Gemini raw result:", JSON.stringify(result.response, null, 2));
 
-    let text =
+    // Lấy text trả về
+    const text =
       (result?.response?.text && result.response.text()) ||
       (result?.response?.candidates?.[0]?.content?.parts?.[0]?.text) ||
       "";
 
-    text = (text || "").trim();
-    return text || "🤔 Gemini không trả về nội dung.";
+    return text.trim() || "🤔 Mình chưa nghĩ ra câu trả lời!";
   } catch (error) {
-    console.error("Gemini API error:", error?.response?.data || error);
-    return "❌ Lỗi khi gọi Gemini API.";
+    console.error("Gemini API error:", error);
+    throw new Error("Không thể kết nối đến Gemini API.");
   }
 }
 

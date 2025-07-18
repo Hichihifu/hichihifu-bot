@@ -3,7 +3,7 @@ const {
   Client,
   GatewayIntentBits,
   PermissionsBitField,
-  EmbedBuilder,
+  EmbedBuilder
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -11,8 +11,18 @@ const express = require("express");
 const { setupMorningGreeting } = require("./morning");
 const { setupSpecialReminder } = require("./specialReminder");
 const { askGemini } = require("./gemini");
+const {
+  loadUserSettings,
+  saveUserSettings,
+  loadCustomAnswers,
+  saveCustomAnswers,
+  appendConversation,
+  getConversationHistory,
+} = require("./dataStore");
 
-// Khởi tạo bot
+/**
+ * Khởi tạo Client với intents cần thiết
+ */
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -22,18 +32,26 @@ const client = new Client({
 });
 
 const PREFIX = "?";
+let userSettings = loadUserSettings();
+let customAnswers = loadCustomAnswers();
 
-// Bộ nhớ lưu hội thoại: Key = userId, Value = mảng hội thoại
-const conversations = new Map();
-
-// Tính năng chào buổi sáng & ngày đặc biệt
+/** ------------------------------------------------------------------
+ *  Tính năng chào buổi sáng
+ * -----------------------------------------------------------------*/
 setupMorningGreeting(client);
+
+/** ------------------------------------------------------------------
+ *  Tính năng thông báo ngày đặc biệt
+ * -----------------------------------------------------------------*/
 setupSpecialReminder(client);
 
-// Quản lý replies tự động cho server
+/** ------------------------------------------------------------------
+ *  Các hàm lưu/đọc replies riêng cho từng server
+ * -----------------------------------------------------------------*/
 function getRepliesPath(guildId) {
   return path.join(__dirname, "replies", `${guildId}.json`);
 }
+
 function loadReplies(guildId) {
   const filePath = getRepliesPath(guildId);
   if (fs.existsSync(filePath)) {
@@ -41,28 +59,83 @@ function loadReplies(guildId) {
   }
   return {};
 }
+
 function saveReplies(guildId, data) {
   const dir = path.join(__dirname, "replies");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir);
   fs.writeFileSync(getRepliesPath(guildId), JSON.stringify(data, null, 2));
 }
 
-// Bot sẵn sàng
+/** ------------------------------------------------------------------
+ *  Sự kiện khởi động bot
+ * -----------------------------------------------------------------*/
 client.once("ready", () => {
   console.log(`🤖 Bot đang chạy dưới tên ${client.user.tag}`);
 });
 
-// Xử lý tin nhắn
+/** ------------------------------------------------------------------
+ *  Xử lý tất cả message/lệnh trong một listener duy nhất
+ * -----------------------------------------------------------------*/
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.guild) return;
 
   const { content } = message;
   const lower = content.toLowerCase();
+  const userId = message.author.id;
   const guildId = message.guild.id;
   const replies = loadReplies(guildId);
-  const userId = message.author.id;
 
-  /* ========== LỆNH QUẢN LÝ REPLIES ========== */
+  /* ========== CÁ NHÂN HÓA PHONG CÁCH ========== */
+  if (lower.startsWith(`${PREFIX}setstyle`)) {
+    const style = content.slice(`${PREFIX}setstyle`.length).trim();
+    if (!style) return message.reply("❗ Vui lòng nhập style. Ví dụ: `?setstyle vui nhộn`");
+    if (!userSettings[userId]) userSettings[userId] = {};
+    userSettings[userId].style = style;
+    saveUserSettings(userSettings);
+    return message.reply(`✅ Đã đặt style cho bạn: ${style}`);
+  }
+
+  if (lower.startsWith(`${PREFIX}settone`)) {
+    const tone = content.slice(`${PREFIX}settone`.length).trim();
+    if (!tone) return message.reply("❗ Vui lòng nhập tone. Ví dụ: `?settone thân thiện`");
+    if (!userSettings[userId]) userSettings[userId] = {};
+    userSettings[userId].tone = tone;
+    saveUserSettings(userSettings);
+    return message.reply(`✅ Đã đặt tone cho bạn: ${tone}`);
+  }
+
+  if (lower.startsWith(`${PREFIX}mystyle`)) {
+    const cfg = userSettings[userId] || {};
+    return message.reply(
+      `🎨 Phong cách hiện tại: Style = ${cfg.style || "mặc định"}, Tone = ${cfg.tone || "mặc định"}`
+    );
+  }
+
+  /* ========== CUSTOM ANSWERS (override AI) ========== */
+  if (lower.startsWith(`${PREFIX}addcustom`)) {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+      return message.reply("❌ Bạn không có quyền.");
+    }
+    const split = content.indexOf("=>");
+    if (split === -1) {
+      return message.reply("📌 Định dạng: `?addcustom câu hỏi => câu trả lời`");
+    }
+    const q = content.slice(PREFIX.length + 9, split).trim().toLowerCase();
+    const a = content.slice(split + 2).trim();
+    if (!q || !a) return message.reply("❗ Thiếu nội dung.");
+    customAnswers[q] = a;
+    saveCustomAnswers(customAnswers);
+    return message.reply(`✅ Đã thêm custom: \`${q}\` → \`${a}\``);
+  }
+
+  if (lower.startsWith(`${PREFIX}listcustom`)) {
+    const keys = Object.keys(customAnswers);
+    if (!keys.length) return message.reply("📭 Chưa có custom answer.");
+    const list = keys.map((k, i) => `${i + 1}. ${k} → ${customAnswers[k]}`).join("\n");
+    return message.reply(`📋 **Custom answers:**\n${list}`);
+  }
+
+  /* ========== QUẢN LÝ REPLIES ========== */
   if (lower.startsWith(`${PREFIX}addreply`)) {
     if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
       return message.channel.send("❌ Bạn không có quyền sử dụng lệnh này.");
@@ -108,17 +181,23 @@ client.on("messageCreate", async (message) => {
     const question = content.slice(PREFIX.length + 3).trim();
     if (!question) return message.reply("❗ Vui lòng nhập câu hỏi sau `?ask`.");
 
+    const customHit = customAnswers[question.toLowerCase()];
+    if (customHit) {
+      appendConversation(userId, "user", question);
+      appendConversation(userId, "bot", customHit);
+      return message.reply(customHit);
+    }
+
     const thinkingMsg = await message.channel.send("⏳ Đang suy nghĩ...");
     try {
-      const response = await askGemini(question, conversations.get(userId));
+      const history = getConversationHistory(userId);
+      const userConfig = userSettings[userId] || {};
+      const response = await askGemini(question, history, userConfig);
 
-      await thinkingMsg.delete();
+      try { await thinkingMsg.delete(); } catch (_) {}
 
-      // Lưu hội thoại
-      const history = conversations.get(userId) || [];
-      history.push({ role: "user", text: question });
-      history.push({ role: "bot", text: response });
-      conversations.set(userId, history);
+      appendConversation(userId, "user", question);
+      appendConversation(userId, "bot", response);
 
       const embed = new EmbedBuilder()
         .setColor("#5865F2")
@@ -129,7 +208,7 @@ client.on("messageCreate", async (message) => {
       return message.reply({ embeds: [embed] });
     } catch (err) {
       console.error(err);
-      await thinkingMsg.delete();
+      try { await thinkingMsg.delete(); } catch (_) {}
       return message.reply("❌ Có lỗi khi gọi Gemini API.");
     }
   }
@@ -140,15 +219,16 @@ client.on("messageCreate", async (message) => {
     if (repliedMessage.author.id === client.user.id) {
       const question = message.content.trim();
       const thinkingMsg = await message.channel.send("⏳ Đang suy nghĩ...");
+
       try {
-        const userHistory = conversations.get(userId) || [];
-        const response = await askGemini(question, userHistory);
+        const history = getConversationHistory(userId);
+        const userConfig = userSettings[userId] || {};
+        const response = await askGemini(question, history, userConfig);
 
-        await thinkingMsg.delete();
+        try { await thinkingMsg.delete(); } catch (_) {}
 
-        userHistory.push({ role: "user", text: question });
-        userHistory.push({ role: "bot", text: response });
-        conversations.set(userId, userHistory);
+        appendConversation(userId, "user", question);
+        appendConversation(userId, "bot", response);
 
         const embed = new EmbedBuilder()
           .setColor("#5865F2")
@@ -157,20 +237,25 @@ client.on("messageCreate", async (message) => {
 
         return message.reply({ embeds: [embed] });
       } catch (err) {
-        await thinkingMsg.delete();
+        try { await thinkingMsg.delete(); } catch (_) {}
         return message.reply("❌ Lỗi khi tiếp tục hội thoại.");
       }
     }
   }
 
-  /* ========== TRẢ LỜI TỰ ĐỘNG ========== */
+  /* ========== AUTO REPLY ========== */
   if (replies[lower]) return message.channel.send(replies[lower]);
 });
 
-// Keep-alive cho Render
+/** ------------------------------------------------------------------
+ * Keep-alive server cho Render
+ * -----------------------------------------------------------------*/
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get("/", (_, res) => res.send("Bot is running!"));
 app.listen(PORT, () => console.log(`🌐 Keep-alive chạy ở cổng ${PORT}`));
 
+/** ------------------------------------------------------------------
+ * Đăng nhập bot
+ * -----------------------------------------------------------------*/
 client.login(process.env.TOKEN);
