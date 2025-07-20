@@ -20,7 +20,7 @@ const { askGemini } = require("./gemini");
   getConversationHistory,
 } = require("./dataStore");*/
 const { backupToGitHub } = require('./backup');
-backupToGitHub(client);
+
 /**
  * Khởi tạo Client với intents cần thiết
  */
