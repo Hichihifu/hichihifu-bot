@@ -201,9 +201,9 @@ client.on("messageCreate", async (message) => {
 
       const embed = new EmbedBuilder()
         .setColor("#5865F2")
-        .setTitle("🤖 Trả lời từ Gemini")
+        .setTitle("🤖")
         .setDescription(response.slice(0, 4000))
-        .setFooter({ text: "Powered by Google Gemini" });
+        .setFooter({ text: "Hichihifu" });
 
       return message.reply({ embeds: [embed] });
     } catch (err) {
@@ -232,7 +232,7 @@ client.on("messageCreate", async (message) => {
 
         const embed = new EmbedBuilder()
           .setColor("#5865F2")
-          .setTitle("🤖 Tiếp tục chủ đề")
+          .setTitle("🤖")
           .setDescription(response.slice(0, 4000));
 
         return message.reply({ embeds: [embed] });
