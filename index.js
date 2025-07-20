@@ -11,15 +11,16 @@ const express = require("express");
 const { setupMorningGreeting } = require("./morning");
 const { setupSpecialReminder } = require("./specialReminder");
 const { askGemini } = require("./gemini");
-const {
+/*const {
   loadUserSettings,
   saveUserSettings,
   loadCustomAnswers,
   saveCustomAnswers,
   appendConversation,
   getConversationHistory,
-} = require("./dataStore");
-
+} = require("./dataStore");*/
+const { backupToGitHub } = require('./backup');
+backupToGitHub(client);
 /**
  * Khởi tạo Client với intents cần thiết
  */
