@@ -19,7 +19,6 @@ const {
   appendConversation,
   getConversationHistory,
 } = require("./dataStore");
-const { backupToGitHub } = require('./backup');
 
 /**
  * Khởi tạo Client với intents cần thiết
