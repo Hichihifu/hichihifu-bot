@@ -35,7 +35,7 @@ const client = new Client({
 const PREFIX = "?";
 let userSettings = loadUserSettings();
 let customAnswers = loadCustomAnswers();
-
+backupToGitHub(client);
 /** ------------------------------------------------------------------
  *  Tính năng chào buổi sáng
  * -----------------------------------------------------------------*/
