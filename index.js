@@ -11,14 +11,14 @@ const express = require("express");
 const { setupMorningGreeting } = require("./morning");
 const { setupSpecialReminder } = require("./specialReminder");
 const { askGemini } = require("./gemini");
-/*const {
+const {
   loadUserSettings,
   saveUserSettings,
   loadCustomAnswers,
   saveCustomAnswers,
   appendConversation,
   getConversationHistory,
-} = require("./dataStore");*/
+} = require("./dataStore");
 const { backupToGitHub } = require('./backup');
 
 /**
@@ -33,9 +33,8 @@ const client = new Client({
 });
 
 const PREFIX = "?";
-//let userSettings = loadUserSettings();
-//let customAnswers = loadCustomAnswers();
-backupToGitHub(client);
+let userSettings = loadUserSettings();
+let customAnswers = loadCustomAnswers();
 /** ------------------------------------------------------------------
  *  Tính năng chào buổi sáng
  * -----------------------------------------------------------------*/
