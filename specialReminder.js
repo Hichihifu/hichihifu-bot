@@ -13,7 +13,7 @@ function setupSpecialReminder(client) {
   const messages = {
     birthday: {
       title: "🎂 Sinh nhật bé cáo cuti",
-      description: "Chúc mừng sinh nhật bé cáo xinh đẹp dễ thw s1tg 🥳 🎂 💖",
+      description: "Chúc mừng sinh nhật bé cáo xinh đẹp dễ thw s1tg 🥳 🎂 💖.\nHôm nay chính là ngày mà bé cáo cuti xinh đẹp ra đời, mọi người hãy cùng chúc chủ server của chúng ta sẽ có bài thi IELTS thật tốt và có những mong muốn dự định trong tương lai sẽ trở thành hiện thực.\n Chúc Chichi dễ thw sớm trở thành bác sĩ để chiều chồng iu nữa.",
       image: "https://cdn.discordapp.com/attachments/979968377068060733/1393556912989147186/c2f221f558c9fb6a16cf6905fd28a9b5.jpg?ex=68739a83&is=68724903&hm=e2d6d6a85599edf2aee78eaa84a2df999f7ac95113e4695ae951240a88bb7fcb"
     },
     loveAnniversary: {
