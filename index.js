@@ -9,7 +9,6 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const { setupMorningGreeting } = require("./morning");
-const { setupSpecialReminder } = require("./specialReminder");
 const { askGemini } = require("./gemini");
 const {
   loadUserSettings,
@@ -42,8 +41,6 @@ setupMorningGreeting(client);
 /** ------------------------------------------------------------------
  *  Tính năng thông báo ngày đặc biệt
  * -----------------------------------------------------------------*/
-setupSpecialReminder(client);
-
 /** ------------------------------------------------------------------
  *  Các hàm lưu/đọc replies riêng cho từng server
  * -----------------------------------------------------------------*/
