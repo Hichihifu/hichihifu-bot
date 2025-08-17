@@ -2,7 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 
 function setupMorningGreeting(client) {
   const CHANNEL_ID = process.env.CHANNEL_ID;
-  const morningHour = 8;
+  const morningHour = 6;
   const morningMinute = 30;
   let lastSentDate = null;
 
